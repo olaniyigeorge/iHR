@@ -28,7 +28,10 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-@router.post("/", response_model=UserDetail, status_code=status.HTTP_201_CREATED)
+
+
+# --- User Registeration ---
+@router.post("/register", response_model=UserDetail, status_code=status.HTTP_201_CREATED, name="user_registeration")
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
         db_user = User(
@@ -49,6 +52,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
+# --- Login for JWT ---
 @router.post("/token/", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
                                  db: db_dependency):

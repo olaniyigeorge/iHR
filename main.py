@@ -21,8 +21,11 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 @app.get("/")
 async def home(user: user_dependency, db:  Session = Depends(get_db)):
     if user is None:
-        raise HTTPException(status_code=403, detail="Authentication Failed")
-    return {"User": user}
+        raise HTTPException({"name": ""}, status_code=403, detail="Authentication Failed")
+    return {
+            "Name": "iHr",
+            "User": user
+        }
     
 # def read_root():
 #     return {
