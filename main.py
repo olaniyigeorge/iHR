@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Annotated, Union
 from fastapi import Depends, FastAPI, HTTPException
 import models, schemas, crud
 from sqlalchemy.orm import Session
@@ -6,7 +6,7 @@ from database import SessionLocal, engine
 import auth
 from utils import get_db
 from starlette import status
-
+from auth import get_current_user
 app = FastAPI()
 app.include_router(auth.router)
 
@@ -14,15 +14,22 @@ app.include_router(auth.router)
 
 models.Base.metadata.create_all(bind=engine)
 
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 
 # --- Basic Endpoints ---
 @app.get("/")
-def read_root():
-    return {
-            "Name": "iHr",
-            "Description": "",
-            "docs": "/docs"
-            }
+async def home(user: user_dependency, db:  Session = Depends(get_db)):
+    if user is None:
+        raise HTTPException(status_code=403, detail="Authentication Failed")
+    return {"User": user}
+    
+# def read_root():
+#     return {
+#             "Name": "iHr",
+#             "Description": "",
+#             "docs": "/docs"
+#             }
 
 
 #  ---- User CRUD ------

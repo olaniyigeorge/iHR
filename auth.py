@@ -28,18 +28,23 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-
-
 @router.post("/", response_model=UserDetail, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = User(
+    try:
+        db_user = User(
         username=user.username, 
         email=user.email, 
         password=bcrypt_context.hash(user.password)
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except Exception as e: # (sqlite3.IntegrityError) UNIQUE constraint failed: users.email
+        print("Exception-------- ", e)
+        raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Could not create user"
+            )
 
     return db_user
 
@@ -68,13 +73,32 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def authenticate_user(username: str, password: str, db):
-    print("Authenticating user.............\n\n\n\n")
     user = db.query(User).filter(User.email==username).first()
     if not user:
         return False
     if not bcrypt_context.verify(password, user.password):
         return False
-    print("Authentication complete.............\n\n\n\n")
     return user
 
 
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        user_id: int = payload.get("id")
+        print("Payload  ", payload)
+        if username is None or user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Could not validate user"
+            )
+        return {
+            "username": username,
+            "id": user_id
+        }
+
+    except JWTError:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Could not validate user"
+            )
