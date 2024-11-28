@@ -29,8 +29,6 @@ def get_users(db: Session) -> list[User]:
     except Exception as e:
         print("Error: ", e)
         return None
-    
-    print("returing usersssss..............")
     return db_users
 
 

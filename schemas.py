@@ -22,16 +22,15 @@ class UserCreate(UserBase):
 
 class UserDetail(UserBase):
     id: int 
-    username: str
-    email: str
     password: str
+    role: Optional[str] 
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class UserResponse(UserBase):
     id: int
-    
+    role: str
     model_config = ConfigDict(from_attributes=True)
 
 

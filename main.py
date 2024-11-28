@@ -3,14 +3,18 @@ from fastapi import Depends, FastAPI, HTTPException
 import models, schemas, crud
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
+from starlette import status
+from starlette.middleware.base import BaseHTTPMiddleware
+
 import auth
 from utils import get_db
-from starlette import status
 from auth import get_current_user
+from middleware import app_middleware 
+from logger import logger
+
 app = FastAPI()
 app.include_router(auth.router)
-
-
+app.add_middleware(BaseHTTPMiddleware, dispatch=app_middleware)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -19,12 +23,10 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # --- Basic Endpoints ---
 @app.get("/")
-async def home(user: user_dependency, db:  Session = Depends(get_db)):
-    if user is None:
-        raise HTTPException({"name": ""}, status_code=403, detail="Authentication Failed")
+def home():    
     return {
-            "Name": "iHr",
-            "User": user
+            "name": "iHr",
+            "details": "iHr home " 
         }
     
 
@@ -41,7 +43,6 @@ def list_user(db: Session = Depends(get_db)):
     users = crud.get_users(db)
     if not users:
         raise HTTPException(status_code=400, detail="Error getting users")
-
     return [schemas.UserDetail.model_validate(user) for user in users]
 
 @app.get("/users/{user_id}", response_model=schemas.UserDetail)
@@ -52,6 +53,12 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     # Convert ORM object to Pydantic model
     return schemas.UserDetail.model_validate(user)
 
+@app.get("/user/me")
+async def home(user: user_dependency, db:  Session = Depends(get_db)):
+    if user is None:
+        raise HTTPException({"name": ""}, status_code=403, detail="Authentication Failed")
+    return {"User": user}
+    
 
 
 # --- Interviews ---
