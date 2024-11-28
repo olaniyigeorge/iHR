@@ -27,13 +27,6 @@ async def home(user: user_dependency, db:  Session = Depends(get_db)):
             "User": user
         }
     
-# def read_root():
-#     return {
-#             "Name": "iHr",
-#             "Description": "",
-#             "docs": "/docs"
-#             }
-
 
 #  ---- User CRUD ------
 @app.post("/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)

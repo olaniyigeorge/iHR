@@ -56,7 +56,6 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/token/", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
                                  db: db_dependency):
-    print("\n\n\n FormData: ", form_data, "\n\n")
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
@@ -69,6 +68,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         "access_token": token,
         "token_type": "Bearer"
     }
+
 
 def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     encode = {'sub': username, 'id': user_id}

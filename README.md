@@ -35,14 +35,14 @@ Invite friends for mock interviews or group simulations.
 
 ## 🛠️ Tech Stack
 ### Backend (FastAPI)
-Database: PostgreSQL for structured data, Redis for caching.
-AI Integration: OpenAI GPT for dynamic question generation.
-API Design: RESTful endpoints for authentication, interview flow, and feedback.
-Real-Time Features: WebSockets for live interview simulations.
-Frontend (Next.js)
-UI Framework: TailwindCSS for a modern, responsive design.
-Data Visualization: Chart.js or Recharts for progress tracking.
-Interactive Components: Real-time Q&A and detailed scorecards.
+- Database: PostgreSQL for structured data, Redis for caching.
+- AI Integration: OpenAI GPT for dynamic question generation.
+- API Design: RESTful endpoints for authentication, interview flow, and feedback.
+- Real-Time Features: WebSockets for live interview simulations.
+### Frontend (Next.js)
+- UI Framework: TailwindCSS for a modern, responsive design.
+- Data Visualization: Chart.js or Recharts for progress tracking.
+- Interactive Components: Real-time Q&A and detailed scorecards.
 
 ## 🚀 Deployment
 ### Backend
