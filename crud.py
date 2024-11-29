@@ -1,12 +1,13 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from models import User, Interview
-from schemas import UserCreate, InterviewCreate, UserDetail
+from models import User, Interview, Statement
+import models
+import schemas
+from dependencies import db_dependency
 from utils import hash_password
 
 
-
-def  create_user(db: Session, user: UserCreate):
+def create_user(db: Session, user: schemas.UserCreate):
     try:
         hashed_password = hash_password(user.password)
         db_user = User(username=user.username, email=user.email, password=hashed_password)
@@ -36,7 +37,28 @@ def get_user(db: Session, user_id: int) -> User:
     db_user = db.query(User).filter(User.id == user_id).first()
     return db_user
 
-def create_interview(db: Session, user_id: int, interview: InterviewCreate):
+
+
+# --- CRUD for jobs ---
+async def create_job(db: db_dependency, job: schemas.JobCreate) -> models.Job:
+    """
+    Create a new job in the database.
+    """
+    new_job = models.Job(
+        title=job.title,
+        description=job.description,
+        requirements=job.requirements,
+        level=job.level,
+        industry_id=job.industry_id
+    )
+    db.add(new_job)
+    await db.commit()
+    await db.refresh(new_job)  
+    return new_job
+
+
+
+def create_interview(db: Session, user_id: int, interview: schemas.InterviewCreate):
     db_interview = Interview(user_id=user_id, hr_ai=interview.hr_ai)
     db.add(db_interview)
     db.commit()
@@ -44,14 +66,7 @@ def create_interview(db: Session, user_id: int, interview: InterviewCreate):
     return db_interview
 
 
-
-
-
-from models import Statement
-from schemas import StatementCreate
-from sqlalchemy.orm import Session
-
-def create_statement(db: Session, statement: StatementCreate):
+def create_statement(db: Session, statement: schemas.StatementCreate):
     db_statement = Statement(
         speaker=statement.speaker,
         content=statement.content,
