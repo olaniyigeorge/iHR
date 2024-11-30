@@ -1,5 +1,6 @@
 from typing import Annotated, Union
 from fastapi import Depends, FastAPI, HTTPException
+import router_ws_interview
 import models, schemas, crud
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
@@ -11,8 +12,8 @@ from dependencies import db_dependency
 from auth import get_current_user
 from middleware import app_middleware 
 from logger import logger
-import router_interviews
-import router_jobs
+import router_interviews, router_jobs, router_interviews, router_statements
+
 
 
 
@@ -22,7 +23,8 @@ app = FastAPI()
 app.include_router(auth.router)
 app.include_router(router_jobs.router)
 app.include_router(router_interviews.router)
-
+app.include_router(router_ws_interview.router)
+app.include_router(router_statements.router)
 # Add Middleware
 app.add_middleware(BaseHTTPMiddleware, dispatch=app_middleware)
 

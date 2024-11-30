@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, ConfigDict, Field
 import enum 
@@ -54,12 +54,10 @@ class JobBase(BaseModel):
     description: Optional[str] = Field(None, description="A brief description of the job role.")
     requirements: Optional[str] = Field(None, description="The qualifications or requirements for the job.")
 
-# --- Create Schema ---
 class JobCreate(JobBase):
     level: int = Field(..., description="Difficulty level of the job (1 to 10).") # JobRoleLevels = Field(..., description="Difficulty level of the job (1 to 10).")
     industry_id: str = Field(..., description="The ID of the industry the job belongs to.")
 
-# --- Update Schema ---
 class JobUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
@@ -67,7 +65,6 @@ class JobUpdate(BaseModel):
     level: Optional[int]
     industry_id: Optional[str]
 
-# --- Details Schema ---
 class JobDetails(JobBase):
     id: int
     level: int
@@ -75,7 +72,21 @@ class JobDetails(JobBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# --- STATEMENT SCHEMAS ---
+class StatementBase(BaseModel):
+    speaker: str
+    content: str
+    is_question: bool
 
+class StatementCreate(StatementBase):
+    interview_id: str
+    replies_to_id: Optional[str] = None
+
+class StatementResponse(StatementBase):
+    id: str
+    timestamp: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 # --- INTERVIEWS SCHEMAS ---
 class InterviewDifficulty(enum.Enum):
@@ -89,12 +100,10 @@ class InterviewStatus(enum.Enum):
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
 
-# Base schema for interviews, common fields
 class InterviewBase(BaseModel):
     hr_ai: str = "iHR AI"
     status: InterviewStatus
 
-# Schema for creating an interview
 class InterviewCreate(InterviewBase):
     user_id: int
     job_id: int
@@ -126,22 +135,54 @@ class InterviewUpdate(InterviewBase):
     insights: Optional[dict]  # {"strengths": [], "weaknesses": []}
 
 
-
-
+# Schema for Interview Context
+class InterviewContext(InterviewBase):
+    id: int
+    user_id: int
+    job_id: int
+    job: JobDetails
+    difficulty: str  # InterviewDifficulty
+    duration: Optional[timedelta]
+    start_time: datetime
+    end_time: Optional[datetime]
+    current_score: int
+    insights: dict  # {"strengths": [], "weaknesses": []}
+    statements: List[StatementResponse]
 
 
 # --- STATEMENT SCHEMAS ---
+
+class SpeakerType(enum.Enum):
+    USER = "USER"
+    AI = "AI"
+
+
+# ---- Base Schema ----
 class StatementBase(BaseModel):
-    speaker: str
-    content: str
-    is_question: bool
-
-class StatementCreate(StatementBase):
     interview_id: str
-    replies_to_id: Optional[str] = None
+    speaker: SpeakerType
+    content: str
+    is_question: bool = False
+    timestamp: datetime = datetime.utcnow()
 
+
+# ---- Create Schema ----
+class StatementCreate(StatementBase):
+    replies_to_id: Optional[str]
+
+
+# ---- Response Schema ----
 class StatementResponse(StatementBase):
-    id: str
-    timestamp: datetime
-    class Config:
-        orm_mode = True
+    id: int
+    replies_to_id: Optional[str]
+    replies: List[Dict[str, str]]  
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---- Update Schema ----
+class StatementUpdate(BaseModel):
+    speaker: Optional[SpeakerType]
+    content: Optional[str]
+    is_question: Optional[bool]
+    timestamp: Optional[datetime]

@@ -167,13 +167,41 @@ def delete_interview(db: db_dependency, interview_id: str):
 # --- CRUD FOR STATEMENTS ---
 def create_statement(db: db_dependency, statement: schemas.StatementCreate):
     db_statement = models.Statement(
-        speaker=statement.speaker,
-        content=statement.content,
-        is_question=statement.is_question,
         interview_id=statement.interview_id,
-        replies_to_id=statement.replies_to_id
+        speaker=statement.speaker.value if isinstance(statement.speaker, schemas.SpeakerType) else statement.speaker,
+        content=statement.content,
+        replies_to_id=statement.replies_to_id,
+        is_question=statement.is_question,
+        timestamp=statement.timestamp
     )
     db.add(db_statement)
     db.commit()
     db.refresh(db_statement)
     return db_statement
+
+
+def get_statements(db: db_dependency, skip: int = 0, limit: int = 10):
+    return db.query(models.Statement).offset(skip).limit(limit).all()
+
+
+def get_statement_by_id(db: db_dependency, statement_id: str):
+    return db.query(models.Statement).filter(models.Statement.id == statement_id).first()
+
+
+def update_statement(db: db_dependency, statement_id: str, statement_update: schemas.StatementUpdate):
+    db_statement = db.query(models.Statement).filter(models.Statement.id == statement_id).first()
+    if db_statement:
+        for var, value in vars(statement_update).items():
+            setattr(db_statement, var, value) if value is not None else None
+        db.commit()
+        db.refresh(db_statement)
+    return db_statement
+
+
+def delete_statement(db: db_dependency, statement_id: str):
+    db_statement = db.query(models.Statement).filter(models.Statement.id == statement_id).first()
+    if db_statement:
+        db.delete(db_statement)
+        db.commit()
+        return True
+    return False

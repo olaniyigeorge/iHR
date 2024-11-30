@@ -12,7 +12,6 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.InterviewResponse, status_code=status.HTTP_201_CREATED)
 def create_interview(interview: schemas.InterviewCreate, db: db_dependency):
-    print("\n\n\n\n", interview, "\n\n\n\n")
     try:
         new_interview = crud.create_interview(db, interview)
         return new_interview
