@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Column, String, Integer, ForeignKey, DateTime, Interval, Enum, Boolean, Text
 )
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime, timedelta
@@ -15,6 +16,7 @@ class UserRoles(enum.Enum):
 
 # Enum for Interview Status
 class InterviewStatus(enum.Enum):
+    SCHEDULED = "Scheduled"
     ONGOING = "Ongoing"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
@@ -38,6 +40,10 @@ class JobRoleLevels(enum.Enum):
     NINE = 9
     TEN = 10
 
+
+
+
+
 #  --- User Model ---
 class User(Base):
     __tablename__ = "users"
@@ -54,7 +60,7 @@ class User(Base):
 # --- Industry Model ---
 class Industry(Base):
     __tablename__ = "industries"
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     description = Column(Text, nullable=True)
 
@@ -63,11 +69,11 @@ class Industry(Base):
 # --- Job Model ---
 class Job(Base):
     __tablename__ = "jobs"
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     requirements = Column(Text, nullable=True)
-    level = Column(Enum(JobRoleLevels), nullable=False)
+    level = Column(Integer, nullable=False )   # Enum(JobRoleLevels), nullable=False)
     industry_id = Column(String, ForeignKey("industries.id"), nullable=False)
 
     industry = relationship("Industry", back_populates="jobs")
@@ -76,15 +82,18 @@ class Job(Base):
 # --- Interview Model ---
 class Interview(Base):
     __tablename__ = "interviews"
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     hr_ai = Column(String, default="iHR AI")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     job_id = Column(String, ForeignKey("jobs.id"), nullable=False)
-    difficulty = Column(Enum(InterviewDifficulty), default=InterviewDifficulty.BEGINNER)
+    difficulty = Column(String, nullable=False, default=InterviewDifficulty.BEGINNER.value)  # Column(Enum(InterviewDifficulty), default=InterviewDifficulty.BEGINNER, name="interview_difficulty")
     duration = Column(Interval, nullable=True, default=timedelta(minutes=30))
-    start_time = Column(DateTime, default=datetime.utcnow)
+    start_time = Column(DateTime, default=datetime.now)
     end_time = Column(DateTime, nullable=True)
-    status = Column(Enum(InterviewStatus), default=InterviewStatus.ONGOING)
+    status = Column(String, nullable=False, default=InterviewStatus.SCHEDULED.value) # Column(Enum(InterviewStatus), default=InterviewStatus.SCHEDULED)
+
+    current_score =  Column(Integer, default=0)
+    insights = Column(JSON, default=lambda: {"strengths": [], "weaknesses": []})
 
     user = relationship("User", back_populates="interviews")
     job = relationship("Job", back_populates="interviews")
@@ -93,7 +102,7 @@ class Interview(Base):
 # ---- Statement Model ---
 class Statement(Base):
     __tablename__ = "statements"
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     interview_id = Column(String, ForeignKey("interviews.id"), nullable=False)
     speaker = Column(String, nullable=False)  # "USER" or "AI"
     content = Column(Text, nullable=False)

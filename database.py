@@ -10,7 +10,7 @@ import os
 if os.getenv("ENVT") == "prod": 
     DATABASE_URL = os.getenv("postgres_db_url")  
 else:
-    DATABASE_URL = "sqlite+aiosqlite:///db.sqlite3"
+    DATABASE_URL = "sqlite:///db.sqlite3" # "sqlite+aiosqlite:///db.sqlite3"
 
 # Create Synchronous Engine
 engine = create_engine(
@@ -18,22 +18,22 @@ engine = create_engine(
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 )
 
-# Create Async Engine
-async_engine = create_async_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    echo=True,
-    future=True
-)
-
-
 # Synchronous Session Factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Async Session Factory
-async_session = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
-)
+
+# # Create Async Engine
+# async_engine = create_async_engine(
+#     DATABASE_URL,
+#     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+#     echo=True,
+#     future=True
+# )
+
+# # Async Session Factory
+# async_session = sessionmaker(
+#     engine, expire_on_commit=False, class_=AsyncSession
+# )
 
 
 

@@ -1,10 +1,9 @@
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, ConfigDict, Field
-from enum import Enum
+import enum 
 
-# ---- Auth Schemas---
-
+# ---- AUTH SCHEMAS ---
 class AuthSignIn(BaseModel):
     email: str
     password: str
@@ -13,7 +12,9 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# --- User Schemas ---
+
+
+# ---  USER SCHEMAS ---
 class UserBase(BaseModel):
     username: str
     email: str
@@ -33,9 +34,10 @@ class UserResponse(UserBase):
     role: str
     model_config = ConfigDict(from_attributes=True)
 
-# --- Job Schema ---
-#  --- Enum for Job Levels ---
-class JobRoleLevels(int, Enum):
+
+
+# --- JOB SCHEMAS ---
+class JobRoleLevels(enum.Enum):
     ONE = 1
     TWO = 2
     THREE = 3
@@ -47,7 +49,6 @@ class JobRoleLevels(int, Enum):
     NINE = 9
     TEN = 10
 
-
 class JobBase(BaseModel):
     title: str
     description: Optional[str] = Field(None, description="A brief description of the job role.")
@@ -55,7 +56,7 @@ class JobBase(BaseModel):
 
 # --- Create Schema ---
 class JobCreate(JobBase):
-    level: JobRoleLevels = Field(..., description="Difficulty level of the job (1 to 10).")
+    level: int = Field(..., description="Difficulty level of the job (1 to 10).") # JobRoleLevels = Field(..., description="Difficulty level of the job (1 to 10).")
     industry_id: str = Field(..., description="The ID of the industry the job belongs to.")
 
 # --- Update Schema ---
@@ -63,7 +64,7 @@ class JobUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
     requirements: Optional[str]
-    level: Optional[JobRoleLevels]
+    level: Optional[int]
     industry_id: Optional[str]
 
 # --- Details Schema ---
@@ -76,33 +77,60 @@ class JobDetails(JobBase):
 
 
 
+# --- INTERVIEWS SCHEMAS ---
+class InterviewDifficulty(enum.Enum):
+    BEGINNER = "Beginner"
+    INTERMEDIATE = "Intermediate"
+    ADVANCED = "Advanced"
 
+class InterviewStatus(enum.Enum):
+    SCHEDULED = "Scheduled"
+    ONGOING = "Ongoing"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"
 
-
-
-
-
-
-
-# --- Interviews Schemas ---
-
+# Base schema for interviews, common fields
 class InterviewBase(BaseModel):
     hr_ai: str = "iHR AI"
-    status: str
+    status: InterviewStatus
 
+# Schema for creating an interview
 class InterviewCreate(InterviewBase):
-    pass
+    user_id: int
+    job_id: int
+    difficulty: InterviewDifficulty
+    duration: Optional[timedelta] = timedelta(minutes=30)
+    start_time: datetime
 
+# Schema for responding with interview details
 class InterviewResponse(InterviewBase):
-    id: str
+    id: int
+    user_id: int
+    job_id: int
+    difficulty: str  # InterviewDifficulty
+    duration: Optional[timedelta]
     start_time: datetime
     end_time: Optional[datetime]
+    current_score: int
+    insights: dict  # {"strengths": [], "weaknesses": []}
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Schema for updating an interview
+class InterviewUpdate(InterviewBase):
+    status: Optional[str]   # Optional[InterviewStatus]
+    difficulty: Optional[str]   # Optional[InterviewDifficulty]
     duration: Optional[timedelta]
-    class Config:
-        orm_mode = True
+    end_time: Optional[datetime]
+    current_score: Optional[int]
+    insights: Optional[dict]  # {"strengths": [], "weaknesses": []}
 
 
 
+
+
+
+# --- STATEMENT SCHEMAS ---
 class StatementBase(BaseModel):
     speaker: str
     content: str

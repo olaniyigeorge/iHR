@@ -21,11 +21,11 @@
 
 - [ ] **Role-based Access:**
   - [ ] Add a `role` field to the `User` model (e.g., admin, user).
-  - [ ] Implement middleware or utility to enforce role-based access control.
+  - [✔] Implement middleware or utility to enforce role-based access control.
 
 ### 2. Interview Simulation API
 - [ ] **Dynamic Question Generation:**
-  - [ ] Create a model for `InterviewScenario` with fields (`id`, `industry`, `role`, `difficulty`).
+  - [✔] Create a model for `InterviewScenario` with fields (`id`, `Industry`, `role`, `difficulty`).
   - [ ] Integrate with OpenAI API (or Hugging Face) to generate questions dynamically.
   - [ ] Implement an endpoint `/interviews/questions` to fetch questions.
 

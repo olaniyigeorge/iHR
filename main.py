@@ -69,14 +69,3 @@ async def home(user: user_dependency, db:  db_dependency):
         raise HTTPException({"name": ""}, status_code=403, detail="Authentication Failed")
     return {"User": user}
     
-
-
-# --- Interviews ---
-
-@app.post("/interviews/", response_model=schemas.InterviewResponse)
-def create_interview(interview: schemas.InterviewCreate, user_id: int, db: db_dependency):
-    return crud.create_interview(db, user_id, interview)
-
-@app.post("/statements/", response_model=schemas.StatementResponse)
-def create_statement(statement: schemas.StatementCreate, db: db_dependency):
-    return crud.create_statement(db, statement)

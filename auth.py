@@ -29,7 +29,7 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 # --- User Registeration ---
-@router.post("/register", response_model=UserDetail, status_code=status.HTTP_201_CREATED, name="user_registeration")
+@router.post("/register/", response_model=UserDetail, status_code=status.HTTP_201_CREATED, name="user_registeration")
 async def create_user(user: UserCreate, db: db_dependency):
     try:
         db_user = User(
