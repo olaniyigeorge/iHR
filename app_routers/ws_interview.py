@@ -7,7 +7,6 @@ from pydub import AudioSegment
 import os
 import time
 
-from router_interviews import router
 from schemas import InterviewContext
 
 

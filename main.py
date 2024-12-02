@@ -1,18 +1,18 @@
 from typing import Annotated, Union
 from fastapi import Depends, FastAPI, HTTPException
-import router_ws_interview
 import models, schemas, crud
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from services.database import SessionLocal, engine
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
+import os
 
-import auth
+import app_routers.auth as auth
 from dependencies import db_dependency
-from auth import get_current_user
+from app_routers.auth import get_current_user
 from middleware import app_middleware 
-from logger import logger
-import router_interviews, router_jobs, router_interviews, router_statements
+from services.logger import logger
+from app_routers import interviews, interviews, jobs, statements, ws_interview
 
 
 
@@ -21,10 +21,10 @@ app = FastAPI()
 
 # Register Routers
 app.include_router(auth.router)
-app.include_router(router_jobs.router)
-app.include_router(router_interviews.router)
-app.include_router(router_ws_interview.router)
-app.include_router(router_statements.router)
+app.include_router(jobs.router)
+app.include_router(interviews.router)
+app.include_router(ws_interview.router)
+app.include_router(statements.router)
 # Add Middleware
 app.add_middleware(BaseHTTPMiddleware, dispatch=app_middleware)
 
@@ -32,7 +32,8 @@ models.Base.metadata.create_all(bind=engine)
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
-
+DATABASE_URL = os.getenv("DATABASE_URL")
+print("DB URL: ", DATABASE_URL)
 # --- Basic Endpoints ---
 @app.get("/")
 def home():    

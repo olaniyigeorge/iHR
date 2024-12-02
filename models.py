@@ -11,8 +11,8 @@ Base = declarative_base()
 
 # Enum for User Roles
 class UserRoles(enum.Enum):
-    ADMIN = "Admin"
-    USER = "User"
+    ADMIN = "admin"
+    USER = "user"
 
 # Enum for Interview Status
 class InterviewStatus(enum.Enum):
@@ -74,7 +74,7 @@ class Job(Base):
     description = Column(Text, nullable=True)
     requirements = Column(Text, nullable=True)
     level = Column(Integer, nullable=False )   # Enum(JobRoleLevels), nullable=False)
-    industry_id = Column(String, ForeignKey("industries.id"), nullable=False)
+    industry_id = Column(Integer, ForeignKey("industries.id"), nullable=False)
 
     industry = relationship("Industry", back_populates="jobs")
     interviews = relationship("Interview", back_populates="job")
@@ -85,7 +85,7 @@ class Interview(Base):
     id = Column(Integer, primary_key=True, index=True)
     hr_ai = Column(String, default="iHR AI")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    job_id = Column(String, ForeignKey("jobs.id"), nullable=False)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
     difficulty = Column(String, nullable=False, default=InterviewDifficulty.BEGINNER.value)  # Column(Enum(InterviewDifficulty), default=InterviewDifficulty.BEGINNER, name="interview_difficulty")
     duration = Column(Interval, nullable=True, default=timedelta(minutes=30))
     start_time = Column(DateTime, default=datetime.now)
@@ -103,10 +103,10 @@ class Interview(Base):
 class Statement(Base):
     __tablename__ = "statements"
     id = Column(Integer, primary_key=True, index=True)
-    interview_id = Column(String, ForeignKey("interviews.id"), nullable=False)
+    interview_id = Column(Integer, ForeignKey("interviews.id"), nullable=False)
     speaker = Column(String, nullable=False)  # "USER" or "AI"
     content = Column(Text, nullable=False)
-    replies_to_id = Column(String, ForeignKey("statements.id"), nullable=True)
+    replies_to_id = Column(Integer, ForeignKey("statements.id"), nullable=True)
     is_question = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 

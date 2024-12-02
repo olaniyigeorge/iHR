@@ -1,7 +1,8 @@
 from logging.config import fileConfig
-
+import os
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from decouple import config as decouple_config
 
 from alembic import context
 import models
@@ -10,10 +11,30 @@ import models
 # access to the values within the .ini file in use.
 config = context.config
 
+
+
+
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+fileConfig(config.config_file_name)
+
+# Dynamically set the `sqlalchemy.url`
+ENVT = decouple_config('ENVT', default="dev", cast=str)
+print("Environment:", ENVT)
+
+if ENVT == "prod":
+    DATABASE_URL = decouple_config("DATABASE_URL")  # Fetch PostgreSQL URL from environment variable
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL is not set in the environment!")
+else:
+    DATABASE_URL = "sqlite:///db.sqlite3"
+
+print("Database URL:", DATABASE_URL)
+
+# Update the config with the dynamically determined database URL
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 
 # add your model's MetaData object here
 # for 'autogenerate' support

@@ -3,14 +3,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
-import os
+from decouple import config as decouple_config
 
 
+ENVT = decouple_config('ENVT', default="dev", cast=str)
+DATABASE_URL = decouple_config('DATABASE_URL', default="sqlite:///db.sqlite3", cast=str) # "sqlite+aiosqlite:///db.sqlite3"
 
-if os.getenv("ENVT") == "prod": 
-    DATABASE_URL = os.getenv("postgres_db_url")  
-else:
-    DATABASE_URL = "sqlite:///db.sqlite3" # "sqlite+aiosqlite:///db.sqlite3"
+print("ENVT", ENVT)
+print(DATABASE_URL)  
+
 
 # Create Synchronous Engine
 engine = create_engine(

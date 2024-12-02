@@ -1,8 +1,8 @@
-"""Afresh
+"""New psql
 
-Revision ID: c60080a16ca2
-Revises: 
-Create Date: 2024-11-30 11:49:39.047622
+Revision ID: d92c3ab1d925
+Revises: 9516d0c5d51a
+Create Date: 2024-12-02 16:23:53.256636
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'c60080a16ca2'
-down_revision: Union[str, None] = None
+revision: str = 'd92c3ab1d925'
+down_revision: Union[str, None] = '9516d0c5d51a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -47,7 +47,7 @@ def upgrade() -> None:
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('requirements', sa.Text(), nullable=True),
     sa.Column('level', sa.Integer(), nullable=False),
-    sa.Column('industry_id', sa.String(), nullable=False),
+    sa.Column('industry_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['industry_id'], ['industries.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -71,7 +71,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_interviews_id'), 'interviews', ['id'], unique=False)
     op.create_table('statements',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('interview_id', sa.String(), nullable=False),
+    sa.Column('interview_id', sa.Integer(), nullable=False),
     sa.Column('speaker', sa.String(), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
     sa.Column('replies_to_id', sa.String(), nullable=True),
