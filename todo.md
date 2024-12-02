@@ -30,7 +30,7 @@
   - [ ] Implement an endpoint `/interviews/questions` to fetch questions.
 
 - [ ] **Simulate Conversational Flow:**
-  - [ ] Implement a WebSocket endpoint `/interviews/simulate` for real-time Q&A.
+  - [✔] Implement a WebSocket endpoint `/ws/simulate-interview` for real-time Q&A.
   - [ ] Use AI (e.g., OpenAI) to generate responses to user answers.
 
 - [ ] **Stress Testing:**
