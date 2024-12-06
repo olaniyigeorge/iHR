@@ -40,6 +40,16 @@ def get_interview(interview_id: str, db: db_dependency):
         raise HTTPException(status_code=404, detail="Interview not found")
     return interview
 
+@router.get("/ctx/{interview_id}", response_model=schemas.InterviewContext)
+def get_interview_context(interview_id: str, db: db_dependency):
+    """
+    Fetch a single interview's context by ID.
+    """
+    interview = crud.get_interview_by_id(db, interview_id)
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    return interview
+
 
 @router.patch("/{interview_id}", response_model=schemas.InterviewResponse)
 def update_interview(

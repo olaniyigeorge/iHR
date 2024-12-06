@@ -1,18 +1,29 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from datetime import datetime
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-import openai
+from openai import OpenAI
 import json
 from io import BytesIO
 from pydub import AudioSegment
 import os
 import time
+from decouple import config as decouple_config
 
+import crud
 from schemas import InterviewContext
+from dependencies import db_dependency
+import schemas
+
+open_api_key = decouple_config('OPENAI_API_KEY', cast=str)
+
+import redis
+
+# Configure Redis
+redis_client = redis.Redis(host='localhost', port=6379, db=0, protocol=3)
+CACHE_TTL = 180  # Cache Time-To-Live in seconds (3 minutes)
 
 
 
-# OpenAI Configuration (replace with your API key)
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 router = APIRouter(
@@ -23,29 +34,7 @@ router = APIRouter(
 
 
 @router.websocket("/simulate-interview/{interview_id}")
-async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str="text"):
-    # get inteview from a cache with ttl set to 3 mins 
-    interview = {
-        "hr_ai": "iHR AI",
-        "status": "Scheduled",
-        "id": 1,
-        "user_id": 1,
-        "job_id": 1,
-        "difficulty": "Beginner",
-        "duration": "PT30M",
-        "start_time": "2024-11-30T10:53:24.864000",
-        "end_time": "2024-12-01T10:53:24.864000",
-        "current_score": 30,
-        "insights": {
-            "strengths": [
-            "understands best practices",
-            "proof with projects"
-            ],
-            "weaknesses": [
-            "poor communication"
-            ]
-        }
-        }
+async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str = "text"):
     await websocket.accept()
     try:
         while True:
@@ -56,41 +45,37 @@ async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str=
             input_type = message.get("type") 
             role = message.get("role")  # "text", "audio", or "transcript"
             content = message.get("content")  # Input content
-            mode = mode # text, code, audio, board, video
-            interview = interview_id
-
+            
             if input_type not in ["text", "audio", "video", "transcript"]:
-                {"error": "Invalid input type"}
+                await websocket.send_text(json.dumps({"error": "Invalid input type"}))
+                continue
 
-            conversation_trigger = {}
-            interview_ctx: InterviewContext = await get_conversation_context(interview_id=interview)
+            # Fetch interview context
+            interview_ctx = await get_conversation_context(interview_id)
             
             # Process user input
-            if input_type == "audio":
-                transcript = convert_audio_to_text(content)
-                ai_response = await get_ai_response(transcript, interview_ctx)
-                audio_response = convert_text_to_audio(ai_response)
-                response = {
-                    "type": "audio",
-                    "role": role,
-                    "interview_ctx": interview_ctx, 
-                    "content": audio_response,
-                }
-            elif input_type == "text":
+            if input_type == "text":
+                await create_statement(
+                    statement_body=content, 
+                    user_id=interview_ctx["user_id"], 
+                    interview_id=interview_ctx["id"], 
+                    db=db_dependency
+                )
                 ai_response = await get_ai_response(content, interview_ctx)
                 response = {
                     "type": "text",
-                    "role": role,
+                    "role": interview_ctx["hr_ai"],
                     "interview_ctx": interview_ctx, 
                     "content": ai_response,
                 }
-            elif input_type == "transcript":
-                ai_response = await get_ai_response(content, interview_ctx)
+            elif input_type == "audio":
+                transcript = convert_audio_to_text(content)
+                ai_response = await get_ai_response(transcript, interview_ctx)
                 response = {
-                    "type": "transcript",
-                    "role": role,
-                    "interview_ctx": interview_ctx,
-                    "content": ai_response,
+                    "type": "audio",
+                    "role": interview_ctx["hr_ai"],
+                    "interview_ctx": interview_ctx, 
+                    "content": convert_text_to_audio(ai_response),
                 }
             else:
                 response = {"error": "Invalid input type"}
@@ -101,14 +86,31 @@ async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str=
     except WebSocketDisconnect:
         print("Client disconnected")
 
-# Get conversation context -- TODO Cache 
-async def get_conversation_context(interview_id: int) -> InterviewContext: 
+# Get conversation context 
+async def get_conversation_context(interview_id: int) -> InterviewContext:
+    # Check Redis for cached context
+    cached_ctx = redis_client.get(f"interview_ctx:{interview_id}")
+    
+    if cached_ctx:
+        print("Cache hit for interview context.")
+        return json.loads(cached_ctx)
+    
+    print("Cache miss for interview context. Fetching from DB.")
+    # Fallback to database or hardcoded context
     ctx = {
         "hr_ai": "iHR AI",
         "status": "Scheduled",
-        "id": 1,
+        "id": interview_id,
         "user_id": 1,
         "job_id": 1,
+        "job": {
+            "title": "Junior Python Developer",
+            "description": "A python developer proficient in the python programming language and any of its frameworks e.g Django, FastAPI",
+            "requirements": "Python, Django, FastAPI",
+            "id": 1,
+            "level": 1,
+            "industry_id": 1
+        },
         "difficulty": "Beginner",
         "duration": "PT30M",
         "start_time": "2024-11-30T10:53:24.864000",
@@ -116,11 +118,11 @@ async def get_conversation_context(interview_id: int) -> InterviewContext:
         "current_score": 30,
         "insights": {
             "strengths": [
-            "understands best practices",
-            "proof with projects"
+                "understands best practices",
+                "proof with projects"
             ],
             "weaknesses": [
-            "poor communication"
+                "poor communication"
             ]
         },
         "statements": [
@@ -129,26 +131,36 @@ async def get_conversation_context(interview_id: int) -> InterviewContext:
         ]
     }
     
+    # Cache the context for future use
+    redis_client.set(f"interview_ctx:{interview_id}", json.dumps(ctx), ex=CACHE_TTL)
     return ctx
+
 
 # Function to process text with AI
 async def get_ai_response(prompt: str, interview_ctx: InterviewContext) -> str:
+    try:
+        client = OpenAI(
+                api_key=open_api_key,
+                max_retries=1,
+            )
+        response = await client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                        {"role": "system", "content": f"You are an HR interviewer interviewng for a {interview_ctx['job']['title']} role."}, 
+                        {"role": "system", "content": f"The interview difficulty level is set to{interview_ctx['difficulty']}."}, 
+                        {"role": "system", "content": f"The history of this conversation is; {interview_ctx['statements']}"}, 
+                        # {"role": "system", "content": f"The history of this conversation is; {interview_ctx.statements}"}, 
 
-    # response = await openai.ChatCompletion.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #             {"role": "system", "content": f"You are an HR interviewer interviewng for a {interview_ctx.job.model_dump("title")} role."}, 
-    #             {"role": "system", "content": f"The interview difficulty level is set to{interview_ctx.difficulty}."}, 
-    #             {"role": "system", "content": f"The history of this conversation is; {interview_ctx.statements}"}, 
-    #             # {"role": "system", "content": f"The history of this conversation is; {interview_ctx.statements}"}, 
+                        {"role": "user", "content": prompt}
+                ],
+        )
+        print(response.choices[0].message)
+        ai_response = response["choices"][0]["message"]["content"]
+    except Exception as e:
+        print("Error: ", e)
+        ai_response = response = f"You are doing well. {time.time()}"
 
-    #             {"role": "user", "content": prompt}
-    #     ],
-    # )
-
-    response = f"You are doing well. {time.time()}"
-
-    return response # response["choices"][0]["message"]["content"]
+    return ai_response 
 
 
 
@@ -173,3 +185,22 @@ def convert_text_to_audio(text: str) -> bytes:
     tts.write_to_fp(audio_buffer)
     audio_buffer.seek(0)
     return audio_buffer.read()
+
+
+async def create_statement(statement_body: str, user_id: int, interview_id: int, db: db_dependency):
+    statement = schemas.StatementCreate(
+        interview_id=interview_id,
+        speaker=f"USER-{user_id}",
+        content=statement_body,
+        is_question=False,
+        timestamp=datetime.utcnow(),
+    )
+    try:
+        new_statement = crud.create_statement(db, statement.dict())
+        print("Statement created successfully.")
+        return new_statement
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error creating statement: {str(e)}"
+        )

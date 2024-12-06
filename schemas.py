@@ -152,15 +152,10 @@ class InterviewContext(InterviewBase):
 
 # --- STATEMENT SCHEMAS ---
 
-class SpeakerType(enum.Enum):
-    USER = "USER"
-    AI = "AI"
-
-
 # ---- Base Schema ----
 class StatementBase(BaseModel):
     interview_id: int
-    speaker: SpeakerType
+    speaker: str
     content: str
     is_question: bool = False
     timestamp: datetime = datetime.utcnow()
@@ -182,7 +177,7 @@ class StatementResponse(StatementBase):
 
 # ---- Update Schema ----
 class StatementUpdate(BaseModel):
-    speaker: Optional[SpeakerType]
+    speaker: Optional[str]
     content: Optional[str]
     is_question: Optional[bool]
     timestamp: Optional[datetime]

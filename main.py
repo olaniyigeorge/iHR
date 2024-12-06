@@ -16,7 +16,6 @@ from app_routers import interviews, interviews, jobs, statements, industries, ws
 
 
 
-
 app = FastAPI()
 
 # Register Routers
@@ -35,10 +34,10 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # --- Basic Endpoints ---
 @app.get("/")
-def home():    
+def home():   
     return {
             "name": "iHr",
-            "details": "iHr home " 
+            "details": "iHr home "
         }
     
 
