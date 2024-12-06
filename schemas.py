@@ -56,7 +56,7 @@ class JobBase(BaseModel):
 
 class JobCreate(JobBase):
     level: int = Field(..., description="Difficulty level of the job (1 to 10).") # JobRoleLevels = Field(..., description="Difficulty level of the job (1 to 10).")
-    industry_id: str = Field(..., description="The ID of the industry the job belongs to.")
+    industry_id: int = Field(..., description="The ID of the industry the job belongs to.")
 
 class JobUpdate(BaseModel):
     title: Optional[str]
@@ -79,7 +79,7 @@ class StatementBase(BaseModel):
     is_question: bool
 
 class StatementCreate(StatementBase):
-    interview_id: str
+    interview_id: int
     replies_to_id: Optional[str] = None
 
 class StatementResponse(StatementBase):
@@ -168,7 +168,7 @@ class StatementBase(BaseModel):
 
 # ---- Create Schema ----
 class StatementCreate(StatementBase):
-    replies_to_id: Optional[str]
+    replies_to_id: Optional[int]
 
 
 # ---- Response Schema ----
@@ -186,3 +186,31 @@ class StatementUpdate(BaseModel):
     content: Optional[str]
     is_question: Optional[bool]
     timestamp: Optional[datetime]
+
+
+
+
+
+# --- INDUSTRY SCHEMAS ---
+class IndustryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+# ---- Create Schema ----
+class IndustryCreate(IndustryBase):
+    pass
+
+
+# ---- Response Schema ----
+class IndustryResponse(IndustryBase):
+    id: int
+    created_at: datetime = datetime.utcnow()  # Optional: Track creation timestamps if added to the model.
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---- Update Schema ----
+class IndustryUpdate(BaseModel):
+    name: Optional[str]
+    description: Optional[str]

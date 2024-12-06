@@ -7,7 +7,11 @@ from decouple import config as decouple_config
 
 
 ENVT = decouple_config('ENVT', default="dev", cast=str)
-DATABASE_URL = decouple_config('DATABASE_URL', default="sqlite:///db.sqlite3", cast=str) # "sqlite+aiosqlite:///db.sqlite3"
+
+if ENVT == "prod":
+    DATABASE_URL = decouple_config('DATABASE_URL', default="sqlite:///db.sqlite3", cast=str) # "sqlite+aiosqlite:///db.sqlite3"
+else:
+    DATABASE_URL = "sqlite:///db.sqlite3"
 
 print("ENVT", ENVT)
 print(DATABASE_URL)  

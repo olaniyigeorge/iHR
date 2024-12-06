@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from starlette import status 
 
-import crud
 from services.database import SessionLocal
 from models import User
 from passlib.context import CryptContext

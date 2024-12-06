@@ -205,3 +205,58 @@ def delete_statement(db: db_dependency, statement_id: str):
         db.commit()
         return True
     return False
+
+
+
+# --- CRUD FOR INDUSTRIES ---
+def create_industry(db: db_dependency, industry: schemas.IndustryCreate):
+    """
+    Create a new industry entry.
+    """
+    db_industry = models.Industry(
+        name=industry.name,
+        description=industry.description
+    )
+    db.add(db_industry)
+    db.commit()
+    db.refresh(db_industry)
+    return db_industry
+
+
+def get_industries(db: db_dependency, skip: int = 0, limit: int = 10):
+    """
+    Fetch a list of industries with pagination.
+    """
+    return db.query(models.Industry).offset(skip).limit(limit).all()
+
+
+def get_industry_by_id(db: db_dependency, industry_id: int):
+    """
+    Fetch a single industry by ID.
+    """
+    return db.query(models.Industry).filter(models.Industry.id == industry_id).first()
+
+
+def update_industry(db: db_dependency, industry_id: int, industry_update: schemas.IndustryUpdate):
+    """
+    Update an industry's details by its ID.
+    """
+    db_industry = db.query(models.Industry).filter(models.Industry.id == industry_id).first()
+    if db_industry:
+        for var, value in vars(industry_update).items():
+            setattr(db_industry, var, value) if value is not None else None
+        db.commit()
+        db.refresh(db_industry)
+    return db_industry
+
+
+def delete_industry(db: db_dependency, industry_id: int):
+    """
+    Delete an industry by its ID.
+    """
+    db_industry = db.query(models.Industry).filter(models.Industry.id == industry_id).first()
+    if db_industry:
+        db.delete(db_industry)
+        db.commit()
+        return True
+    return False

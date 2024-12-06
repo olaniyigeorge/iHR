@@ -12,7 +12,7 @@ from dependencies import db_dependency
 from app_routers.auth import get_current_user
 from middleware import app_middleware 
 from services.logger import logger
-from app_routers import interviews, interviews, jobs, statements, ws_interview
+from app_routers import interviews, interviews, jobs, statements, industries, ws_interview
 
 
 
@@ -25,6 +25,7 @@ app.include_router(jobs.router)
 app.include_router(interviews.router)
 app.include_router(ws_interview.router)
 app.include_router(statements.router)
+app.include_router(industries.router)
 # Add Middleware
 app.add_middleware(BaseHTTPMiddleware, dispatch=app_middleware)
 
@@ -32,8 +33,6 @@ models.Base.metadata.create_all(bind=engine)
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-print("DB URL: ", DATABASE_URL)
 # --- Basic Endpoints ---
 @app.get("/")
 def home():    
