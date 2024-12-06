@@ -63,12 +63,12 @@ class JobUpdate(BaseModel):
     description: Optional[str]
     requirements: Optional[str]
     level: Optional[int]
-    industry_id: Optional[str]
+    industry_id: Optional[int]
 
 class JobDetails(JobBase):
     id: int
     level: int
-    industry_id: str
+    industry_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -80,10 +80,10 @@ class StatementBase(BaseModel):
 
 class StatementCreate(StatementBase):
     interview_id: int
-    replies_to_id: Optional[str] = None
+    replies_to_id: Optional[int] = None
 
 class StatementResponse(StatementBase):
-    id: str
+    id: int
     timestamp: datetime
     
     model_config = ConfigDict(from_attributes=True)
@@ -159,7 +159,7 @@ class SpeakerType(enum.Enum):
 
 # ---- Base Schema ----
 class StatementBase(BaseModel):
-    interview_id: str
+    interview_id: int
     speaker: SpeakerType
     content: str
     is_question: bool = False
@@ -174,8 +174,8 @@ class StatementCreate(StatementBase):
 # ---- Response Schema ----
 class StatementResponse(StatementBase):
     id: int
-    replies_to_id: Optional[str]
-    replies: List[Dict[str, str]]  
+    replies_to_id: Optional[int]
+    replies: List[Dict[str, int]]  
 
     model_config = ConfigDict(from_attributes=True)
 
