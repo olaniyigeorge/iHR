@@ -194,13 +194,16 @@ async def create_statement(statement_body: str, user_id: int, interview_id: int,
         content=statement_body,
         is_question=False,
         timestamp=datetime.utcnow(),
+        replies_to_id=None
     )
     try:
-        new_statement = crud.create_statement(db, statement.dict())
+        new_statement = crud.create_statement(db, statement.model_dump())
         print("Statement created successfully.")
         return new_statement
     except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error creating statement: {str(e)}"
-        )
+        # Retry
+        # raise HTTPException(
+        #     status_code=400,
+        #     detail=f"Error creating statement: {str(e)}"
+        # )
+        print(f"Error creating statement: {str(e)}")

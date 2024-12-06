@@ -168,9 +168,9 @@ def delete_interview(db: db_dependency, interview_id: str):
 def create_statement(db: db_dependency, statement: schemas.StatementCreate):
     db_statement = models.Statement(
         interview_id=statement.interview_id,
-        speaker=statement.speaker.value if isinstance(statement.speaker, schemas.SpeakerType) else statement.speaker,
+        speaker=statement.speaker,
         content=statement.content,
-        replies_to_id=statement.replies_to_id,
+        replies_id=statement.replies_id,
         is_question=statement.is_question,
         timestamp=statement.timestamp
     )

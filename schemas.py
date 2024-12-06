@@ -22,6 +22,10 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserPublic(UserBase):
+    id: int 
+    role: Optional[str] 
+    
 class UserDetail(UserBase):
     id: int 
     password: str
@@ -80,7 +84,7 @@ class StatementBase(BaseModel):
 
 class StatementCreate(StatementBase):
     interview_id: int
-    replies_to_id: Optional[int] = None
+    replies_id: Optional[int] = None
 
 class StatementResponse(StatementBase):
     id: int
@@ -139,6 +143,7 @@ class InterviewUpdate(InterviewBase):
 class InterviewContext(InterviewBase):
     id: int
     user_id: int
+    user: UserPublic
     job_id: int
     job: JobDetails
     difficulty: str  # InterviewDifficulty
@@ -163,14 +168,14 @@ class StatementBase(BaseModel):
 
 # ---- Create Schema ----
 class StatementCreate(StatementBase):
-    replies_to_id: Optional[int]
+    replies_id: Optional[int]
 
 
 # ---- Response Schema ----
 class StatementResponse(StatementBase):
     id: int
-    replies_to_id: Optional[int]
-    replies: List[Dict[str, int]]  
+    replies_id: Optional[int]
+    # replies: List[Dict[str, int]]  
 
     model_config = ConfigDict(from_attributes=True)
 

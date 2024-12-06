@@ -106,9 +106,9 @@ class Statement(Base):
     interview_id = Column(Integer, ForeignKey("interviews.id"), nullable=False)
     speaker = Column(String, nullable=False)  # "USER" or "AI"
     content = Column(Text, nullable=False)
-    replies_to_id = Column(Integer, ForeignKey("statements.id"), nullable=True)
+    replies_id = Column(Integer, ForeignKey("statements.id"), nullable=True)
     is_question = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     interview = relationship("Interview", back_populates="statements")
-    replies = relationship("Statement", remote_side=[id])
+    # replies = relationship("Statement", remote_side=[id])
