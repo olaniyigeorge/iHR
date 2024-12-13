@@ -6,6 +6,10 @@ from services.database import SessionLocal, engine
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 import os
+from decouple import config as decouple_config
+import nltk
+nltk.download('punkt_tab')
+
 
 import app_routers.auth as auth
 from dependencies import db_dependency
@@ -13,6 +17,7 @@ from app_routers.auth import get_current_user
 from middleware import app_middleware 
 from services.logger import logger
 from app_routers import interviews, interviews, jobs, statements, industries, ws_interview
+
 
 
 
@@ -34,11 +39,23 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # --- Basic Endpoints ---
 @app.get("/")
-def home():   
+def home():
+    base_url = decouple_config('EVNT', cast=str , default="http://localhost:8000")
+    
+    web_socket_links = [f"{base_url}/ws/{endpoint}" for endpoint in ["simulate-interview/{interview_id}"]]
+    
+    w = "my name is Abeleje Olaniyi George. I am a software developer"
+
+    response = nltk.word_tokenize(w)
+
+    print(response)
+
     return {
-            "name": "iHr",
-            "details": "iHr home "
-        }
+        "name": "iHr",
+        "details": "iHr home",
+        "docs": f"{base_url}/docs",
+        "web-socket endpoints": web_socket_links
+    }
     
 
 #  ---- User CRUD ------

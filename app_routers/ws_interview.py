@@ -128,6 +128,7 @@ async def get_conversation_context(interview_id: int) -> InterviewContext:
         "statements": [
             {"speaker": "user", "body": "What are my responsibilities for this role?"},
             {"speaker": "user", "body": "How much will I be paid?"},
+            {"speaker": "ihr-ai-0", "body": "You will be paid $2000 per month"},
         ]
     }
     
@@ -141,17 +142,17 @@ async def get_ai_response(prompt: str, interview_ctx: InterviewContext) -> str:
     try:
         client = OpenAI(
                 api_key=open_api_key,
-                max_retries=1,
+                max_retries=2,
             )
         response = await client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                        {"role": "system", "content": f"You are an HR interviewer interviewng for a {interview_ctx['job']['title']} role."}, 
-                        {"role": "system", "content": f"The interview difficulty level is set to{interview_ctx['difficulty']}."}, 
-                        {"role": "system", "content": f"The history of this conversation is; {interview_ctx['statements']}"}, 
-                        # {"role": "system", "content": f"The history of this conversation is; {interview_ctx.statements}"}, 
+                        # {"role": "system", "content": f"You are an HR interviewer interviewng for a {interview_ctx['job']['title']} role."}, 
+                        # {"role": "system", "content": f"The interview difficulty level is set to{interview_ctx['difficulty']}."}, 
+                        # {"role": "system", "content": f"The history of this conversation is; {interview_ctx['statements']}"}, 
+                        # # {"role": "system", "content": f"The history of this conversation is; {interview_ctx.statements}"}, 
 
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt[:20]}
                 ],
         )
         print(response.choices[0].message)
@@ -194,10 +195,11 @@ async def create_statement(statement_body: str, user_id: int, interview_id: int,
         content=statement_body,
         is_question=False,
         timestamp=datetime.utcnow(),
-        replies_to_id=None
+        replies_id=None
     )
+    print("STATEMENT: ", statement, "\n", type(statement))
     try:
-        new_statement = crud.create_statement(db, statement.model_dump())
+        new_statement = crud.create_statement(db, statement)
         print("Statement created successfully.")
         return new_statement
     except Exception as e:
