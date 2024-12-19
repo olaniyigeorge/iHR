@@ -2,6 +2,7 @@ from typing import Annotated, Union
 from fastapi import Depends, FastAPI, HTTPException
 import models, schemas, crud
 from sqlalchemy.orm import Session
+from services import hr_manager
 from services.database import SessionLocal, engine
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -39,16 +40,30 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # --- Basic Endpoints ---
 @app.get("/")
-def home():
-    base_url = decouple_config('EVNT', cast=str , default="http://localhost:8000")
+async def home():
+    base_url = decouple_config('DOMAIN', cast=str , default="http://localhost:8000")
     
     web_socket_links = [f"{base_url}/ws/{endpoint}" for endpoint in ["simulate-interview/{interview_id}"]]
     
-    w = "my name is Abeleje Olaniyi George. I am a software developer"
+    # w = "my name is Abeleje Olaniyi George. I am a software developer"
+    # response = nltk.word_tokenize(w)
+    # print(response)
+    content = "I am a web dev"
+    interview_ctx = {
+        "user_id": 1,
+        "id": 1
+    }
 
-    response = nltk.word_tokenize(w)
+    st = await hr_manager.create_statement(
+        statement_body=content, 
+        speaker=f"USER-{interview_ctx["user_id"]}", 
+        interview_id=interview_ctx["id"], 
+        replies_id=0,
+        db=db_dependency
+    )
 
-    print(response)
+    print("STATMENT: ", st)
+
 
     return {
         "name": "iHr",

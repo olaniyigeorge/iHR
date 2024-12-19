@@ -108,7 +108,7 @@ class Statement(Base):
     content = Column(Text, nullable=False)
     replies_id = Column(Integer, ForeignKey("statements.id"), nullable=True)
     is_question = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.now)
 
     interview = relationship("Interview", back_populates="statements")
-    # replies = relationship("Statement", remote_side=[id])
+    replies = relationship("Statement", remote_side=[id])

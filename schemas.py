@@ -131,7 +131,7 @@ class InterviewResponse(InterviewBase):
 
 # Schema for updating an interview
 class InterviewUpdate(InterviewBase):
-    status: Optional[str]   # Optional[InterviewStatus]
+    status: Optional[str]   # Optional[InterviewStatus] 
     difficulty: Optional[str]   # Optional[InterviewDifficulty]
     duration: Optional[timedelta]
     end_time: Optional[datetime]
@@ -163,7 +163,7 @@ class StatementBase(BaseModel):
     speaker: str
     content: str
     is_question: bool = False
-    timestamp: datetime = datetime.utcnow()
+    timestamp: datetime = datetime.now()
 
 
 # ---- Create Schema ----
