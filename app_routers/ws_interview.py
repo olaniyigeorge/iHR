@@ -1,11 +1,12 @@
 from datetime import datetime
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from typing import List, Dict
 
 
 import crud
-from dependencies import db_dependency
+from dependencies import async_db_session_dependency
+from sqlalchemy.ext.asyncio import AsyncSession
 # from services.hr_manager import convert_audio_to_text, convert_text_to_audio, create_statement, get_ai_response, get_conversation_context, update_interview
 import schemas
 from services import hr_manager
@@ -50,7 +51,7 @@ async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str 
                         statement_body=content, 
                         speaker=f"USER-{interview_ctx["user_id"]}", 
                         interview_id=interview_ctx["id"], 
-                        db=db_dependency
+                        db=async_db_session_dependency
                     )
                     print("getting ai response... \n\n")
                     ai_response = await hr_manager.get_ai_response(content, interview_ctx)
@@ -59,7 +60,7 @@ async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str 
                         statement_body=ai_response, 
                         speaker=interview_ctx["ihr-ai"],  # ihr-ai
                         interview_id=interview_ctx["id"], 
-                        db=db_dependency
+                        db=async_db_session_dependency
                     )
                     print("updating interview score and insights... \n\n")
                     await hr_manager.update_interview(interview_ctx["id"], ai_response)
@@ -99,7 +100,7 @@ async def interview_simulate(websocket: WebSocket, interview_id: int, mode: str 
 
 
 
-async def create_statement(statement_body: str, speaker: str, interview_id: int, replies: int, db: db_dependency):
+async def create_statement(statement_body: str, speaker: str, interview_id: int, replies: int, db: AsyncSession =  Depends(async_db_session_dependency)):
     statement = schemas.StatementCreate(
         interview_id=interview_id,
         speaker=speaker,
@@ -111,7 +112,7 @@ async def create_statement(statement_body: str, speaker: str, interview_id: int,
 
     print("STATEMENT: ", statement, "\n", type(statement))
     try:
-        new_statement = crud.create_statement(db, statement)
+        new_statement = await crud.create_statement(db, statement)
         print("Statement created successfully.")
         return new_statement
     except Exception as e:

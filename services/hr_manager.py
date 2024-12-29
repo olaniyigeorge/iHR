@@ -12,7 +12,8 @@ import redis
 
 import crud, models, schemas
 from schemas import InterviewContext
-from dependencies import db_dependency
+from dependencies import async_db_session_dependency
+from sqlalchemy.ext.asyncio import AsyncSession
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -203,15 +204,13 @@ def convert_text_to_audio(text: str) -> bytes:
     return audio_buffer.read()
 
 
-def create_statement(statement_body: str, speaker: str, interview_id: int, replies_id: int, db: db_dependency):
-    print(schemas.StatementCreate(
-        interview_id=interview_id,
-        speaker=speaker,
-        content=statement_body,
-        is_question=False,
-        timestamp=datetime.now(),
-        replies_id=replies_id or 0
-    ))
+async def create_statement(
+        statement_body: str, 
+        speaker: str, 
+        interview_id: int, 
+        replies_id: int, 
+        db: AsyncSession
+    ):
     statement = schemas.StatementCreate(
         interview_id=interview_id,
         speaker=speaker,
@@ -223,7 +222,7 @@ def create_statement(statement_body: str, speaker: str, interview_id: int, repli
 
     print("STATEMENT: ", statement, "\n", type(statement))
     try:
-        new_statement = crud.create_statement(db, statement)
+        new_statement = await crud.async_create_statement(db, statement)
         print("Statement created successfully.")
         return new_statement
     except Exception as e:
@@ -235,7 +234,7 @@ def create_statement(statement_body: str, speaker: str, interview_id: int, repli
         print(f"Error creating statement: {str(e)}")
 
 
-# def create_statement(statement: schemas.StatementCreate, db: db_dependency):
+# def create_statement(statement: schemas.StatementCreate, db: async_db_session_dependency):
 #     try:
 #         new_statement = crud.create_statement(db, statement)
 #         return new_statement

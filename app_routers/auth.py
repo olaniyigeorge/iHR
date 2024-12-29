@@ -2,16 +2,16 @@ from datetime import datetime, timezone, timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status 
 
-from services.database import SessionLocal
 from models import User
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer 
 from jose import jwt, JWTError
 from schemas import Token, UserCreate, UserDetail, UserResponse
-from dependencies import db_dependency
+from dependencies import async_db_session_dependency
 
 
 router = APIRouter(
@@ -29,30 +29,30 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 # --- User Registeration ---
 @router.post("/register/", response_model=UserDetail, status_code=status.HTTP_201_CREATED, name="user_registeration")
-async def create_user(user: UserCreate, db: db_dependency):
+async def create_user(user: UserCreate, db: AsyncSession = Depends(async_db_session_dependency)):
     try:
         db_user = User(
-        username=user.username, 
-        email=user.email, 
-        password=bcrypt_context.hash(user.password)
-    )
+            username=user.username, 
+            email=user.email, 
+            password=bcrypt_context.hash(user.password)
+        )
         db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        await db.commit()
+        await db.refresh(db_user)
     except Exception as e: # (sqlite3.IntegrityError) UNIQUE constraint failed: users.email
         print("Exception-------- ", e)
         raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Could not create user"
-            )
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Could not create user"
+        )
     return db_user
 
 
 # --- Login for JWT ---
 @router.post("/token/", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
-                                 db: db_dependency):
-    user = authenticate_user(form_data.username, form_data.password, db)
+                                 db: AsyncSession = Depends(async_db_session_dependency)):
+    user = await authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -72,8 +72,9 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     encode.update({'exp': expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def authenticate_user(username: str, password: str, db):
-    user = db.query(User).filter(User.email==username).first()
+async def authenticate_user(username: str, password: str, db: AsyncSession):
+    result = await db.execute(select(User).filter(User.email == username))
+    user = result.scalars().first()
     if not user:
         return False
     if not bcrypt_context.verify(password, user.password):

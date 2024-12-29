@@ -13,6 +13,7 @@ async def app_middleware(request: Request, call_next):
     log_dict = {
         "url": request.url.path,
         "method": request.method,
+        "status_code": response.status_code,
         "req_process_time": process_time
     }
     logger.info(log_dict, extra=log_dict)

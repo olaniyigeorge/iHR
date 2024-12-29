@@ -1,24 +1,11 @@
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from services.database import SessionLocal #,  async_session
+from services.database import get_async_db_session, get_db_session # SessionLocal
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# from services.database import sessionmanager
 
-# Synchronous Dependency to get the database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+db_session_dependency = Annotated[Session, Depends(get_db_session)]
 
-db_dependency = Annotated[Session, Depends(get_db)]
-
-
-# # Asynchronous Dependency
-# async def get_async_db():
-#     async with async_session() as session:
-#         yield session
-
-# db_dependency = Annotated[AsyncSession, Depends(get_async_db)]
+async_db_session_dependency = Annotated[AsyncSession, Depends(get_async_db_session)]
