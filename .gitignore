@@ -168,3 +168,5 @@ app.log
 .env
 .env.prod
 logs/*
+
+*.db
