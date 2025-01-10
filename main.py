@@ -8,20 +8,18 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import os
 from decouple import config as decouple_config
 import nltk
-import app_routers.auth as auth
-from dependencies import async_db_session_dependency
-from app_routers.auth import get_current_user
+from utils.dependencies import async_db_session_dependency
 from middleware import app_middleware 
 from services.database import async_engine
 from services.logger import logger
-from app_routers import interviews, jobs, statements, industries, ws_interview
+from config import config
+from routers import auth, interviews, jobs, statements, industries, ws_interview, users
 import uvicorn
 import logging
 import sys
 from contextlib import asynccontextmanager
-from settings import settings
 from services.database import database
-import models, schemas, crud
+import utils.models as models, utils.schemas as schemas, utils.crud as crud
 
 
 @asynccontextmanager
@@ -31,12 +29,11 @@ async def lifeespan(app: FastAPI):
     await database.disconnect()
 
 
-app = FastAPI(title=settings.project_name, docs_url="/api/docs")
-
-
+app = FastAPI(title=config.PROJECT_NAME, docs_url="/api/docs")
 
 
 # Register Routers
+app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(jobs.router)
 app.include_router(interviews.router)
@@ -48,8 +45,6 @@ app.include_router(industries.router)
 app.add_middleware(BaseHTTPMiddleware, dispatch=app_middleware)
 
 
-user_dependency = Annotated[dict, Depends(get_current_user)]
-
 # --- Basic Endpoints ---
 @app.get("/", response_model=None)
 async def home(db: AsyncSession = Depends(async_db_session_dependency)):
@@ -57,57 +52,13 @@ async def home(db: AsyncSession = Depends(async_db_session_dependency)):
     
     web_socket_links = [f"{base_url}/ws/{endpoint}" for endpoint in ["simulate-interview/{interview_id}"]]
     
-    content = "I am a web dev"
-    interview_ctx = {
-        "user_id": 1,
-        "id": 1
-    }
-
-    print("\ncreating statement \n ")
-    st = await hr_manager.create_statement(
-        statement_body=content, 
-        speaker=f"USER-{interview_ctx['user_id']}", 
-        interview_id=interview_ctx["id"], 
-        replies_id=0,
-        db=db
-    )
-
-    print("ST: ", st)
-
     return {
         "name": "iHr",
         "details": "iHr home",
-        "docs": f"{base_url}/docs",
+        "docs": f"{base_url}/api/docs",
         "web-socket endpoints": web_socket_links
     }
 
-#  ---- User CRUD ------
-@app.post("/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
-async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(async_db_session_dependency)):
-    db_user = await crud.create_user(db, user)
-    if not db_user:
-        raise HTTPException(status_code=400, detail="User already exists")
-    return db_user
-
-@app.get("/users/", response_model=list[schemas.UserDetail])
-async def list_user(db: AsyncSession = Depends(async_db_session_dependency)):
-    users = await crud.get_users(db)
-    if not users:
-        raise HTTPException(status_code=400, detail="Error getting users")
-    return [schemas.UserDetail.model_validate(user) for user in users]
-
-@app.get("/users/{user_id}", response_model=schemas.UserDetail)
-async def get_user(user_id: int, db: AsyncSession = Depends(async_db_session_dependency)):
-    user = await crud.get_user(db, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return schemas.UserDetail.model_validate(user)
-
-@app.get("/user/me")
-async def get_current_user_info(user: user_dependency, db: AsyncSession = Depends(async_db_session_dependency)):
-    if user is None:
-        raise HTTPException(status_code=403, detail="Authentication Failed")
-    return {"User": user}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)

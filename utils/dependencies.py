@@ -7,7 +7,6 @@ from services.database import database
 
 
 
-
 db_session_dependency = Annotated[Session, Depends(database)]
 async_db_session_dependency = Annotated[AsyncSession, Depends(database)]
 

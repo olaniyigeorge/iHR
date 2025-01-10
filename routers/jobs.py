@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-import crud
-import schemas
-from dependencies import get_async_db_session
+import utils.crud as crud
+import utils.schemas as schemas
+from utils.dependencies import get_async_db_session
 
 router = APIRouter(
     prefix="/jobs",
