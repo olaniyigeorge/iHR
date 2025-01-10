@@ -1,15 +1,16 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-import models
-import schemas
 from sqlalchemy.exc import SQLAlchemyError
-from dependencies import async_db_session_dependency
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils import hash_password
+
+from utils.helpers import hash_password
+import utils.models as models
+import utils.schemas as schemas
+from utils.dependencies import async_db_session_dependency
 
 
-# --- CRUD FOR USERS ---
+# --- CRUD FOR aUSERS ---
 def create_user(db: Session, user: schemas.UserCreate):
     try:
         hashed_password = hash_password(user.password)

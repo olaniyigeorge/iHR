@@ -59,7 +59,7 @@ class JobBase(BaseModel):
     requirements: Optional[str] = Field(None, description="The qualifications or requirements for the job.")
 
 class JobCreate(JobBase):
-    level: int = Field(..., description="Difficulty level of the job (1 to 10).") # JobRoleLevels = Field(..., description="Difficulty level of the job (1 to 10).")
+    level: int = Field(..., description="Difficulty level of the job (1 to 10).")
     industry_id: int = Field(..., description="The ID of the industry the job belongs to.")
 
 class JobUpdate(BaseModel):
@@ -73,7 +73,6 @@ class JobDetails(JobBase):
     id: int
     level: int
     industry_id: int
-
     model_config = ConfigDict(from_attributes=True)
 
 # --- STATEMENT SCHEMAS ---
@@ -89,7 +88,6 @@ class StatementCreate(StatementBase):
 class StatementResponse(StatementBase):
     id: int
     timestamp: datetime
-    
     model_config = ConfigDict(from_attributes=True)
 
 # --- INTERVIEWS SCHEMAS ---
@@ -115,102 +113,53 @@ class InterviewCreate(InterviewBase):
     duration: Optional[timedelta] = timedelta(minutes=30)
     start_time: datetime
 
-# Schema for responding with interview details
 class InterviewResponse(InterviewBase):
     id: int
     user_id: int
     job_id: int
-    difficulty: str  # InterviewDifficulty
+    difficulty: str
     duration: Optional[timedelta]
     start_time: datetime
     end_time: Optional[datetime]
     current_score: int
-    insights: dict  # {"strengths": [], "weaknesses": []}
-
+    insights: dict
     model_config = ConfigDict(from_attributes=True)
 
-# Schema for updating an interview
 class InterviewUpdate(InterviewBase):
-    status: Optional[str]   # Optional[InterviewStatus] 
-    difficulty: Optional[str]   # Optional[InterviewDifficulty]
+    status: Optional[str]
+    difficulty: Optional[str]
     duration: Optional[timedelta]
     end_time: Optional[datetime]
     current_score: Optional[int]
-    insights: Optional[dict]  # {"strengths": [], "weaknesses": []}
+    insights: Optional[dict]
 
-
-# Schema for Interview Context
 class InterviewContext(InterviewBase):
     id: int
     user_id: int
     user: UserPublic
     job_id: int
     job: JobDetails
-    difficulty: str  # InterviewDifficulty
+    difficulty: str
     duration: Optional[timedelta]
     start_time: datetime
     end_time: Optional[datetime]
     current_score: int
-    insights: dict  # {"strengths": [], "weaknesses": []}
+    insights: dict
     statements: List[StatementResponse]
-
-
-# --- STATEMENT SCHEMAS ---
-
-# ---- Base Schema ----
-class StatementBase(BaseModel):
-    interview_id: int
-    speaker: str
-    content: str
-    is_question: bool = False
-    timestamp: datetime = datetime.now()
-
-
-# ---- Create Schema ----
-class StatementCreate(StatementBase):
-    replies_id: Optional[int]
-
-
-# ---- Response Schema ----
-class StatementResponse(StatementBase):
-    id: int
-    replies_id: Optional[int]
-    # replies: List[Dict[str, int]]  
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ---- Update Schema ----
-class StatementUpdate(BaseModel):
-    speaker: Optional[str]
-    content: Optional[str]
-    is_question: Optional[bool]
-    timestamp: Optional[datetime]
-
-
-
-
 
 # --- INDUSTRY SCHEMAS ---
 class IndustryBase(BaseModel):
     name: str
     description: Optional[str] = None
 
-
-# ---- Create Schema ----
 class IndustryCreate(IndustryBase):
     pass
 
-
-# ---- Response Schema ----
 class IndustryResponse(IndustryBase):
     id: int
-    created_at: datetime = datetime.utcnow()  # Optional: Track creation timestamps if added to the model.
-
+    created_at: datetime = datetime.utcnow()
     model_config = ConfigDict(from_attributes=True)
 
-
-# ---- Update Schema ----
 class IndustryUpdate(BaseModel):
     name: Optional[str]
     description: Optional[str]

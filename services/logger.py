@@ -1,31 +1,21 @@
 import logging
 import sys
 
-
-# get logger
+# Configure logger
 logger = logging.getLogger()
-
-# create formatter
-formatter = logging.Formatter(
-    fmt="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# create handlers
-stream_handler = logging.StreamHandler(sys.stdout)
-file_handler = logging.FileHandler("app.log")
-
-
-# set formatter
-stream_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
-
-# add handler to logger
-logger.handlers = [ stream_handler, file_handler]
-
-
-
-# set log-level
 logger.setLevel(logging.INFO)
 
+# Create formatter
+formatter = logging.Formatter(fmt="%(asctime)s - %(levelname)s - %(message)s")
 
+# Create and configure stream handler
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+
+# Create and configure file handler
+file_handler = logging.FileHandler("/logs/server.logs")
+file_handler.setFormatter(formatter)
+
+# Add handlers to logger
+logger.handlers = [stream_handler, file_handler]
 
